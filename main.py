@@ -38,13 +38,6 @@ except:
     browser.find_element(By.XPATH, '//*[@id="continue_session_button"]').click()
 
 #some variables
-know_new = browser.find_element(By.XPATH, '//*[@id="know_new"]')
-skip = browser.find_element(By.XPATH, '//*[@id="skip"]')
-word = browser.find_element(By.XPATH, '//*[@id="question"]/div[2]/div[2]')
-check = browser.find_element(By.XPATH, '//*[@id="check"]/h4')
-next_word = browser.find_element(By.XPATH, '//*[@id="next_word"]')
-answer = browser.find_element(By.XPATH, '//*[@id="answer"]')
-
 time.sleep(2)
 nr = 0
 
@@ -54,10 +47,17 @@ cur = db.cursor()
 
 #main loop of program (I hope it's working)
 while True:
+    #more variables
     random_sec1 = random.randint(2, 4) #wait time before writing answer
     random_sec2 = random.randint(4, 8) #wait time before clicking check
     random_sec3 = random.randint(1, 3) #wait time before clicking next word
     random_chance = random.randint(0, 100) #leave it unchanged
+    know_new = browser.find_element(By.XPATH, '//*[@id="know_new"]')
+    skip = browser.find_element(By.XPATH, '//*[@id="skip"]')
+    word = browser.find_element(By.XPATH, '//*[@id="question"]/div[2]/div[2]')
+    check = browser.find_element(By.XPATH, '//*[@id="check"]/h4')
+    next_word = browser.find_element(By.XPATH, '//*[@id="next_word"]')
+    answer = browser.find_element(By.XPATH, '//*[@id="answer"]')
     try:
         know_new.click()
         skip.click()
