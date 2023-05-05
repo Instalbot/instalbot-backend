@@ -54,9 +54,9 @@ cur = db.cursor()
 
 #main loop of program (I hope it's working)
 while True:
-    random_sec1 = random.randint(3, 8) #wait time before writing answer
-    random_sec2 = random.randint(5, 27) #wait time before clicking check
-    random_sec3 = random.randint(2, 6) #wait time before clicking next word
+    random_sec1 = random.randint(2, 4) #wait time before writing answer
+    random_sec2 = random.randint(4, 8) #wait time before clicking check
+    random_sec3 = random.randint(1, 3) #wait time before clicking next word
     random_chance = random.randint(0, 100) #leave it unchanged
     try:
         know_new.click()
