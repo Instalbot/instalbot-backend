@@ -1,10 +1,14 @@
-import time, sys, sqlite3, random
+import time, sys, sqlite3, random, json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 #start time
 start_time = time.time()
+
+#config
+with open('config.json') as f:
+    config = json.load(f)
 
 #setting up chrome driver
 sys.stdout.reconfigure(encoding='utf-8')
@@ -26,8 +30,8 @@ login_button = browser.find_element(By.XPATH, '//*[@id="main-container"]/div[3]/
 
 #login
 time.sleep(2)
-username.send_keys('')
-password.send_keys('')
+username.send_keys(config["username"])
+password.send_keys(config["password"])
 login_button.click()
 
 #finding elements to start session
@@ -88,7 +92,6 @@ while True:
             print(f"Completed {nr} words")
 
 cur.close()
-db.commit()
 db.close()
 
 #end time
