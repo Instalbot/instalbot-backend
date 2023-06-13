@@ -24,8 +24,8 @@ login_button = browser.find_element(By.XPATH, '//*[@id="main-container"]/div[3]/
 
 #login
 time.sleep(2)
-username.send_keys('')
-password.send_keys('')
+username.send_keys(config["username"])
+password.send_keys(config["password"])
 login_button.click()
 
 #finding elements to data scraping
