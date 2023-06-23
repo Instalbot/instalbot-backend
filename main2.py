@@ -3,6 +3,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
+#config
+with open('config.json') as f:
+    config = json.load(f)
+
 #setting up chrome driver
 sys.stdout.reconfigure(encoding='utf-8')
 options = webdriver.ChromeOptions()
