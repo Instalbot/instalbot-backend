@@ -11,12 +11,13 @@ with open('config.json') as f:
     config = json.load(f)
 
 #setting up chrome driver
+service = webdriver.chrome.service.Service(executable_path='./chromedriver.exe')
 sys.stdout.reconfigure(encoding='utf-8')
 options = webdriver.ChromeOptions()
 options.add_argument('--mute-audio')
 options.add_argument('--disable-usb-devices')
 options.add_argument('--disable-gpu')
-browser = webdriver.Chrome('./chromedriver.exe', options=options)
+browser = webdriver.Chrome(service=service, options=options)
 
 #opening website
 url = ('https://instaling.pl/teacher.php?page=login')

@@ -1,4 +1,4 @@
-import time, sys, sqlite3
+import time, sys, sqlite3, json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
@@ -8,13 +8,14 @@ with open('config.json') as f:
     config = json.load(f)
 
 #setting up chrome driver
+service = webdriver.chrome.service.Service(executable_path='./chromedriver.exe')
 sys.stdout.reconfigure(encoding='utf-8')
 options = webdriver.ChromeOptions()
 options.add_argument('--mute-audio')
 options.add_argument('--disable-usb-devices')
 options.add_argument('--disable-gpu')
 options.add_argument("--headless")
-browser = webdriver.Chrome('./chromedriver.exe', options=options)
+browser = webdriver.Chrome(service=service, options=options)
 
 #opening website
 url = ('https://instaling.pl/teacher.php?page=login')
@@ -55,7 +56,7 @@ while True:
         wynik = cur.fetchone()
         if wynik is None:
             cur.execute('''INSERT OR IGNORE INTO slowka (polski, niemiecki) VALUES (?, ?)''', (slowko2, slowko1))
-            print(f'Dodano {slowko2}, {slowko1}')
+            print(f'Added {slowko2}, {slowko1}')
     except NoSuchElementException:
         break
 
