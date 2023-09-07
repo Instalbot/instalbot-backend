@@ -24,13 +24,13 @@ url = ('https://instaling.pl/teacher.php?page=login')
 browser.get(url)
 
 #finding elements to login
-time.sleep(2)
+time.sleep(3)
 username = browser.find_element(By.XPATH, '//*[@id="log_email"]')
 password = browser.find_element(By.XPATH, '//*[@id="log_password"]')
 login_button = browser.find_element(By.XPATH, '//*[@id="main-container"]/div[3]/form/div/div[3]/button')
 
 #login
-time.sleep(2)
+time.sleep(3)
 username.send_keys(config["username"])
 password.send_keys(config["password"])
 login_button.click()
@@ -43,7 +43,7 @@ except:
     browser.find_element(By.XPATH, '//*[@id="continue_session_button"]').click()
 
 #some variables
-time.sleep(2)
+time.sleep(3)
 nr = 0
 
 #connecting to database
@@ -66,7 +66,7 @@ while True:
     try:
         know_new.click()
         skip.click()
-        time.sleep(1)
+        time.sleep(2)
     except:
         try:
             word_str = word.text
