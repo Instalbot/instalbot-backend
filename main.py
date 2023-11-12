@@ -19,28 +19,41 @@ options.add_argument('--disable-usb-devices')
 options.add_argument('--disable-gpu')
 browser = webdriver.Chrome(service=service, options=options)
 
+#def check if element exists
+def browserfind_click(xpath):
+    for i in range(5):
+        try:
+            browser.find_element(By.XPATH, xpath).click()
+            break
+        except NoSuchElementException:
+            print(f"Element not found retrying {i+1}/5")
+            time.sleep(5)
+
+def browserfind_sendkeys(xpath, keys):
+    for i in range(5):
+        try:
+            browser.find_element(By.XPATH, xpath).send_keys(keys)
+            break
+        except NoSuchElementException:
+            print(f"Element not found retrying {i+1}/5")
+            time.sleep(5)
+
 #opening website
 url = ('https://instaling.pl/teacher.php?page=login')
 browser.get(url)
 
 #finding elements to login
 time.sleep(3)
-username = browser.find_element(By.XPATH, '//*[@id="log_email"]')
-password = browser.find_element(By.XPATH, '//*[@id="log_password"]')
-login_button = browser.find_element(By.XPATH, '//*[@id="main-container"]/div[3]/form/div/div[3]/button')
-
-#login
-time.sleep(3)
-username.send_keys(config["username"])
-password.send_keys(config["password"])
-login_button.click()
+browserfind_sendkeys('//*[@id="log_email"]', config["username"])
+browserfind_sendkeys('//*[@id="log_password"]', config["password"])
+browserfind_click('//*[@id="main-container"]/div[3]/form/div/div[3]/button')
 
 #finding elements to start session
-browser.find_element(By.XPATH, '//*[@id="student_panel"]/p[1]/a').click()
+browserfind_click('//*[@id="student_panel"]/p[1]/a')
 try:
-    browser.find_element(By.XPATH, '//*[@id="start_session_button"]').click()
+    browserfind_click('//*[@id="start_session_button"]')
 except:
-    browser.find_element(By.XPATH, '//*[@id="continue_session_button"]').click()
+    browserfind_click('//*[@id="continue_session_button"]')
 
 #some variables
 time.sleep(3)

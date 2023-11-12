@@ -17,29 +17,43 @@ options.add_argument('--disable-gpu')
 options.add_argument("--headless")
 browser = webdriver.Chrome(service=service, options=options)
 
+#def check if element exists
+def browserfind_click(xpath):
+    for i in range(5):
+        try:
+            browser.find_element(By.XPATH, xpath).click()
+            break
+        except NoSuchElementException:
+            print(f"Element not found retrying {i+1}/5")
+            time.sleep(5)
+
+def browserfind_sendkeys(xpath, keys):
+    for i in range(5):
+        try:
+            browser.find_element(By.XPATH, xpath).send_keys(keys)
+            break
+        except NoSuchElementException:
+            print(f"Element not found retrying {i+1}/5")
+            time.sleep(5)
+
 #opening website
 url = ('https://instaling.pl/teacher.php?page=login')
 browser.get(url)
 
 #finding elements to login
 time.sleep(3)
-username = browser.find_element(By.XPATH, '//*[@id="log_email"]')
-password = browser.find_element(By.XPATH, '//*[@id="log_password"]')
-login_button = browser.find_element(By.XPATH, '//*[@id="main-container"]/div[3]/form/div/div[3]/button')
+browserfind_sendkeys('//*[@id="log_email"]', config["username"])
+browserfind_sendkeys('//*[@id="log_password"]', config["password"])
+browserfind_click('//*[@id="main-container"]/div[3]/form/div/div[3]/button')
 
-#login
-time.sleep(3)
-username.send_keys(config["username"])
-password.send_keys(config["password"])
-login_button.click()
-
-#finding elements to data scraping
-browser.find_element(By.XPATH, '//*[@id="student_panel"]/p[5]/a').click()
-browser.find_element(By.XPATH, '//*[@id="account_page"]/div/a[1]/h4').click()
-browser.find_element(By.XPATH, '//*[@id="show_words"]').click()
+#finding elements to start data scraping
+browserfind_click('//*[@id="student_panel"]/p[5]/a')
+browserfind_click('//*[@id="account_page"]/div/a[1]/h4')
+browserfind_click('//*[@id="show_words"]')
 
 tr = 0
 
+time.sleep(3)
 #connecting to database
 db = sqlite3.connect("data.db")
 cur = db.cursor()
