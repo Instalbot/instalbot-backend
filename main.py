@@ -2,6 +2,7 @@ import time, sys, sqlite3, random, json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 
 #start time
 start_time = time.time()
@@ -49,6 +50,7 @@ browserfind_sendkeys('//*[@id="log_password"]', config["password"])
 browserfind_click('//*[@id="main-container"]/div[3]/form/div/div[3]/button')
 
 #finding elements to start session
+time.sleep(1)
 browserfind_click('//*[@id="student_panel"]/p[1]/a')
 try:
     browserfind_click('//*[@id="start_session_button"]')

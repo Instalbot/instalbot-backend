@@ -47,6 +47,7 @@ browserfind_sendkeys('//*[@id="log_password"]', config["password"])
 browserfind_click('//*[@id="main-container"]/div[3]/form/div/div[3]/button')
 
 #finding elements to start data scraping
+time.sleep(1)
 browserfind_click('//*[@id="student_panel"]/p[5]/a')
 browserfind_click('//*[@id="account_page"]/div/a[1]/h4')
 browserfind_click('//*[@id="show_words"]')
