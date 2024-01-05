@@ -8,7 +8,7 @@ def not_found(_):
     return jsonify({
         "message": "Requested resource was not found",
         "status": 404
-    })
+    }), 404
 
 
 @app.route("/")
