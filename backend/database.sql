@@ -1,19 +1,17 @@
 CREATE TABLE IF NOT EXISTS users(
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    userId SERIAL PRIMARY KEY,
+    userid SERIAL PRIMARY KEY,
     email TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS flags(
-    userId INT PRIMARY KEY,
+    userid INT PRIMARY KEY REFERENCES users ON DELETE CASCADE,
     todo BOOLEAN DEFAULT FALSE,
-    hoursRange numrange DEFAULT numrange('[14, 22]'),
-    FOREIGN KEY (userId) REFERENCES users(userId)
+    hoursrange numrange DEFAULT numrange('[14, 22]')
 );
 
 CREATE TABLE IF NOT EXISTS words(
-    userId INT PRIMARY KEY,
-    list JSON NOT NULL,
-    FOREIGN KEY (userId) REFERENCES users(userId)
+    userid INT PRIMARY KEY REFERENCES users ON DELETE CASCADE,
+    list JSON NOT NULL DEFAULT '[]'
 );
