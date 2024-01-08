@@ -4,9 +4,10 @@ from sqlalchemy.dialects.postgresql import NUMRANGE
 from psycopg2.extras import NumericRange
 from sqlalchemy.orm import relationship
 from argon2 import PasswordHasher, profiles, exceptions as HashingExceptions
+from backend.matching import check_email, check_password_strength
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://root:1234@127.0.0.1:5432/instalbot'
+app.config['SQLALCHEMY_DATABASE_URI'] = ''
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -79,8 +80,20 @@ def index():
 @app.route("/api/v1/user/register", methods=['POST'])
 def user_register():
     username = request.form['username']
-    password = request.form['password']
+    password = request.form['password'].strip()
     email = request.form['email']
+
+    if not check_email(email):
+        return jsonify({
+            "message": "Email is not valid",
+            "status": 400
+        }), 400
+    
+    if len(password) < 8 or not check_password_strength(password):
+        return jsonify({
+            "message": "Password is too weak",
+            "status": 400
+        }), 400
 
     user = db.session.query(User).filter_by(email=email).first()
 
@@ -88,7 +101,7 @@ def user_register():
         return jsonify({
             "message": "Email is taken",
             "status": 409
-        })
+        }), 409
 
     try:
         hashed_password = ph.hash(password)
@@ -96,7 +109,7 @@ def user_register():
         return jsonify({
             "message": "Encountered an error while hashing password",
             "status": 500
-        })
+        }), 500
 
     user = User(username=username, password=hashed_password, email=email)
     db.session.add(user)
@@ -112,7 +125,7 @@ def user_register():
         "message": "User registered successfully",
         "status": 201,
         "user": user.__json__()
-    })
+    }), 201
 
 
 @app.route("/api/v1/user/login", methods=['POST'])
@@ -125,7 +138,7 @@ def user_login():
     invalid_password = jsonify({
         "message": "Invalid username or password",
         "status": 401
-    })
+    }), 401
 
     if not user:
         return invalid_password, 401
@@ -137,4 +150,4 @@ def user_login():
         "message": "Logged in successfully",
         "status": 200,
         "user": user.__json__()
-    })
+    }), 200
