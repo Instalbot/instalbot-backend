@@ -34,7 +34,7 @@ def hello():
     }), 200
 
 # Import all paths
-from .accounts import urls
+from .users import urls
 
 if __name__ == '__main__':
     app.run()

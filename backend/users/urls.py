@@ -8,7 +8,7 @@ method_not_allowed = {
     'code': 405
 }
 
-@app.route('/accounts', methods=['POST'])
+@app.route('/users', methods=['POST'])
 def list_create_accounts():
     if request.method == 'POST': return create_user_controller()
     else: return jsonify(method_not_allowed)
