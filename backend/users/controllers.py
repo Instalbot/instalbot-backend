@@ -38,8 +38,8 @@ def create_user_controller():
     db.session.add(new_user)
     db.session.commit()
 
-    flag = Flag(userid=user.userid)
-    word = Word(userid=user.userid)
+    flag = Flag(userid=new_user.userid)
+    word = Word(userid=new_user.userid)
 
     db.session.add_all([flag, word])
     db.session.commit()
