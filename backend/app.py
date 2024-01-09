@@ -83,6 +83,12 @@ def user_register():
     password = request.form['password'].strip()
     email = request.form['email']
 
+    if not username or not password or not email:
+        return jsonify({
+            "message": "Invalid request",
+            "code": 400
+        }), 400
+
     if not check_email(email):
         return jsonify({
             "message": "Email is not valid",
@@ -141,13 +147,23 @@ def user_login():
     }), 401
 
     if not user:
-        return invalid_password, 401
+        return invalid_password
 
     if not user.check_password(password):
-        return invalid_password, 401
-
+        return invalid_password
+    
     return jsonify({
         "message": "Logged in successfully",
         "status": 200,
-        "user": user.__json__()
+        "user": user.__json__(),
+        "session_token": ""
     }), 200
+
+
+# @app.route("/api/v1/session")
+# def session_get():
+#     session_token = request.form['session_token']
+
+#     return jsonify({
+
+#     })
