@@ -9,8 +9,15 @@ ph = PasswordHasher.from_parameters(profiles.RFC_9106_LOW_MEMORY)
 
 def create_user_controller():
     request_form = request.form.to_dict()
-    email = request_form['email']
     username = request_form['username']
+    email = request_form['email']
+    password = request_form['password']
+
+    if not username or not password or not email:
+        return jsonify({
+            "message": "Invalid request",
+            "code": 400
+        }), 400
 
     user = db.session.query(User).filter_by(email=email).first()
 
@@ -23,7 +30,7 @@ def create_user_controller():
     hashed_password = ""
 
     try:
-        hashed_password = ph.hash(request_form['password'])
+        hashed_password = ph.hash(password)
     except Exception as e:
         return jsonify({
             "message": "Encountered an error while hashing password",
