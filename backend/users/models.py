@@ -24,7 +24,7 @@ class User(db.Model):
         return verify_password(password, self.password)
 
     def __repr__(self):
-        return "<User %r>" % self.email
+        return '<User %r>' % self.email
 
 
 class Flag(db.Model):
@@ -32,10 +32,10 @@ class Flag(db.Model):
 
     userid = db.Column(db.Integer, db.ForeignKey('users.userid', ondelete='CASCADE'), primary_key=True)
     todo = db.Column(db.Boolean, default=False)
-    hoursrange = db.Column(NUMRANGE, default="[14, 22]")
+    hoursrange = db.Column(NUMRANGE, default='[14, 22]')
 
     def __repr__(self):
-        return "<Flag %r>" % self.userid
+        return '<Flag %r>' % self.userid
 
 
 class Word(db.Model):
@@ -45,4 +45,4 @@ class Word(db.Model):
     list = db.Column(JSON, nullable=False, default=[])
 
     def __repr__(self):
-        return "<Word %r>" % self.userid
+        return '<Word %r>' % self.userid

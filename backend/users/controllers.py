@@ -12,24 +12,24 @@ def create_user_controller():
 
     if not username or not password or not email:
         return jsonify({
-            "message": "Invalid request",
-            "code": 400
+            'message': 'Invalid request',
+            'code': 400
         }), 400
 
     user = db.session.query(User).filter_by(email=email).first()
 
     if user:
         return jsonify({
-            "message": "Email is taken",
-            "code": 409
+            'message': 'Email is taken',
+            'code': 409
         }), 409
 
     hashed_password = hash_password(password)
 
     if hashed_password is None:
         return jsonify({
-            "message": "Encountered an error while hashing password",
-            "code": 500
+            'message': 'Encountered an error while hashing password',
+            'code': 500
         }), 500
 
     new_user = User(
@@ -47,6 +47,6 @@ def create_user_controller():
     db.session.commit()
 
     return jsonify({
-        "message": "User registered successfully",
-        "code": 201,
+        'message': 'User registered successfully',
+        'code': 201,
     }), 201
