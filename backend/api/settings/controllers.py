@@ -29,42 +29,39 @@ def get_settings():
 
 
 def update_settings():
-    request_form = request.json
-    userid = get_jwt_identity()
+    try:
+        request_json = request.get_json()
+        userid = get_jwt_identity()
 
-    invalid_request = jsonify({
-        'message': 'Invalid request',
-        'code': 400
-    }), 400
+        if not request_json or 'flags' not in request_json:
+            return jsonify({'message': 'Invalid request format', 'code': 400}), 400
 
-    if 'flags' not in request_form:
-        return invalid_request
+        flags = request_json['flags']
 
-    flags = request_form['flags']
+        if 'hoursrange' not in flags or 'lower' not in flags['hoursrange'] or 'upper' not in flags['hoursrange']:
+            return jsonify({'message': 'Invalid hoursrange format', 'code': 400}), 400
 
-    if 'hoursrange' not in flags:
-        return invalid_request
+        lower = flags['hoursrange']['lower']
+        upper = flags['hoursrange']['upper']
 
-    hoursrange = flags['hoursrange']
+        if not is_number(lower) or not is_number(upper):
+            return jsonify({'message': 'Invalid number format in hoursrange', 'code': 400}), 400
 
-    if not ('lower' in hoursrange and 'upper' in hoursrange) or not is_number(hoursrange['lower']) or not is_number(hoursrange['upper']):
-        return invalid_request
+        user = db.session.query(User).filter_by(userid=userid).first()
 
-    user = db.session.query(User).filter_by(userid=userid).first()
+        if user is None:
+            return jsonify({'message': 'User does not exist', 'code': 401}), 401
 
-    if user is None:
-        return jsonify({
-            'message': 'User does not exist',
-            'code': 401
-        })
+        # Ensure the user updating the flags is the same as the one in the JWT
+        if user.userid != userid:
+            return jsonify({'message': 'Unauthorized to update user flags', 'code': 403}), 403
 
-    flag_to_update = user.flags[0]
+        flag_to_update = user.flags[0]
+        flag_to_update.hoursrange = "[{}, {}]".format(lower, upper)
 
-    flag_to_update.hoursrange = "[{}, {}]".format(hoursrange['lower'], hoursrange['upper'])
+        db.session.commit()
 
-    db.session.commit()
+        return jsonify({'message': 'OK!', 'code': 200}), 200
 
-    return jsonify({
-        'message': 'OK!',
-        'code': 200
-    }), 200
+    except Exception as e:
+        return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
