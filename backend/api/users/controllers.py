@@ -77,4 +77,8 @@ def login_user_controller():
 
     payload = create_access_token(identity=user.userid)
 
-    return jsonify({'message': 'OK', 'code': 200, 'token': payload})
+    return jsonify({
+        'message': 'OK',
+        'code': 200,
+        'token': payload
+    }), 200
