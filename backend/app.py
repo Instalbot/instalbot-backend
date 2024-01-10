@@ -1,9 +1,27 @@
 import os
 from flask import jsonify
-from . import create_app
+from flask_jwt_extended import JWTManager
+from . import create_app, jwt
 from .api import urls
 
 app = create_app(os.getenv('CONFIG_MODE') or 'development')
+
+
+@jwt.expired_token_loader
+def my_expired_token_callback(_, expired_token):
+    token_type = expired_token['type']
+    return jsonify({
+        'message': 'The {} token has expired'.format(token_type),
+        'code': 401
+    }), 401
+
+
+@jwt.invalid_token_loader
+def my_invalid_token_callback(_):
+    return jsonify({
+        'message': 'Token is invalid',
+        'code': 401
+    }), 401
 
 
 @app.errorhandler(404)
