@@ -6,7 +6,6 @@ from .config import config
 db = SQLAlchemy()
 migrate = Migrate()
 
-
 def create_app(config_mode):
     app = Flask(__name__)
     app.config.from_object(config[config_mode])

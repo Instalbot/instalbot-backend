@@ -2,7 +2,7 @@ from sqlalchemy.dialects.postgresql import JSON, NUMRANGE
 from datetime import datetime
 
 from .. import db
-
+from .password_hasher import verify_password
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -19,6 +19,9 @@ class User(db.Model):
 
     # Define the relationship with the Words table
     words = db.relationship('Word', backref='user', cascade='all, delete-orphan', single_parent=True)
+
+    def verify_password(self, password):
+        return verify_password(password, self.password)
 
     def __repr__(self):
         return "<User %r>" % self.email

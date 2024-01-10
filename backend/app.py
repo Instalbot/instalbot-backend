@@ -4,7 +4,6 @@ from . import create_app
 
 app = create_app(os.getenv('CONFIG_MODE') or 'development')
 
-
 @app.errorhandler(404)
 def not_found(_):
     return jsonify({

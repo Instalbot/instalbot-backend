@@ -1,11 +1,8 @@
 from flask import request, jsonify
-from argon2 import PasswordHasher, profiles
 
 from .models import User, Flag, Word
+from .password_hasher import hash_password
 from .. import db
-
-
-ph = PasswordHasher.from_parameters(profiles.RFC_9106_LOW_MEMORY)
 
 def create_user_controller():
     request_form = request.form.to_dict()
@@ -27,11 +24,9 @@ def create_user_controller():
             "code": 409
         }), 409
 
-    hashed_password = ""
+    hashed_password = hash_password(password)
 
-    try:
-        hashed_password = ph.hash(password)
-    except Exception as e:
+    if hashed_password is None:
         return jsonify({
             "message": "Encountered an error while hashing password",
             "code": 500
