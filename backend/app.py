@@ -1,7 +1,7 @@
 import os
 from flask import jsonify
 from . import create_app
-from .users import urls
+from .api import urls
 
 app = create_app(os.getenv('CONFIG_MODE') or 'development')
 
@@ -38,7 +38,7 @@ def hello():
     }), 200
 
 
-app.register_blueprint(urls.users, url_prefix='/users')
+app.register_blueprint(urls.apiBlueprint, url_prefix='/api')
 
 
 if __name__ == '__main__':

@@ -1,9 +1,9 @@
 from flask import request, jsonify
-import jwt
+from flask_jwt_extended import create_access_token
 
 from .models import User, Flag, Word
 from .password_hasher import hash_password
-from .. import db, app
+from ..urls import db
 
 
 def create_user_controller():
@@ -75,6 +75,6 @@ def login_user_controller():
             'code': 401
         }), 401
 
-    payload = jwt.encode({'email': user.email, 'userid': user.userid}, app.app.config['SECRET_KEY'], algorithm='HS256')
+    payload = create_access_token(identity=user.userid)
 
     return jsonify({'message': 'OK', 'code': 200, 'token': payload})

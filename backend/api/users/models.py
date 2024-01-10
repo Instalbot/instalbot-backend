@@ -1,7 +1,7 @@
 from sqlalchemy.dialects.postgresql import JSON, NUMRANGE
 from datetime import datetime
 
-from .. import db
+from ..urls import db
 from .password_hasher import verify_password
 
 
