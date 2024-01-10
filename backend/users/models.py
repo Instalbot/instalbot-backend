@@ -4,6 +4,7 @@ from datetime import datetime
 from .. import db
 from .password_hasher import verify_password
 
+
 class User(db.Model):
     __tablename__ = 'users'
 

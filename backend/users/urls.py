@@ -1,14 +1,15 @@
-from flask import request, jsonify
+from flask import Blueprint
 
-from ..app import app
-from .controllers import create_user_controller
+from .controllers import create_user_controller, login_user_controller
 
-method_not_allowed = {
-    'message': 'Method Not Allowed',
-    'code': 405
-}
+users = Blueprint('users', __name__)
 
-@app.route('/users', methods=['POST'])
-def list_create_accounts():
-    if request.method == 'POST': return create_user_controller()
-    else: return jsonify(method_not_allowed)
+
+@users.post('/register')
+def users_register():
+    return create_user_controller()
+
+
+@users.post('/login')
+def users_login():
+    return login_user_controller()

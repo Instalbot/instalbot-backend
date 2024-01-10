@@ -1,8 +1,10 @@
 import os
 from flask import jsonify
 from . import create_app
+from .users import urls
 
 app = create_app(os.getenv('CONFIG_MODE') or 'development')
+
 
 @app.errorhandler(404)
 def not_found(_):
@@ -11,12 +13,14 @@ def not_found(_):
         'code': 404
     }), 404
 
+
 @app.errorhandler(500)
 def internal_server_error(_):
     return jsonify({
         'message': 'Internal server error',
         'code': 500
     }), 500
+
 
 @app.errorhandler(405)
 def method_not_allowed(_):
@@ -25,6 +29,7 @@ def method_not_allowed(_):
         'code': 405
     }), 405
 
+
 @app.route('/')
 def hello():
     return jsonify({
@@ -32,8 +37,9 @@ def hello():
         'code': 200,
     }), 200
 
-# Import all paths
-from .users import urls
+
+app.register_blueprint(urls.users, url_prefix='/users')
+
 
 if __name__ == '__main__':
     app.run()
