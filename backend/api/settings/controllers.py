@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
 from ..urls import db
-from ..users.models import User
+from ..users.models import User, Word, Flag
 
 
 def is_number(variable):
@@ -9,23 +9,38 @@ def is_number(variable):
 
 
 def get_settings():
-    userid = get_jwt_identity()
+    try:
+        userid = get_jwt_identity()
 
-    user = db.session.query(User).filter_by(userid=userid).first()
+        user = db.session.query(User).filter_by(userid=userid).first()
 
-    if user is None:
+        if user is None:
+            return jsonify({'message': 'User does not exist', 'code': 401}), 401
+
+        # Ensure flags and words exist, or create them
+        if not user.flags:
+            # Create default flags if they don't exist
+            default_flags = Flag(todo=False, hoursrange="[14, 22]")
+            user.flags.append(default_flags)
+
+        if not user.words:
+            # Create default words if they don't exist
+            default_words = Word(list=[])
+            user.words.append(default_words)
+
+        db.session.commit()
+
         return jsonify({
-            'message': 'User does not exist',
-            'code': 401
-        })
+            'message': 'OK!',
+            'code': 200,
+            'userid': userid,
+            'flags': user.flags[0].to_dict(),
+            'words': user.words[0].to_dict()
+        }), 200
 
-    return jsonify({
-        'message': 'OK!',
-        'code': 200,
-        'userid': userid,
-        'flags': user.flags[0].to_dict(),
-        'words': user.words[0].to_dict()
-    }), 200
+    except Exception as e:
+        db.session.rollback()  # Rollback changes if an exception occurs
+        return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
 
 
 def update_settings():
