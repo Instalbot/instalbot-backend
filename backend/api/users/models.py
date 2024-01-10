@@ -27,6 +27,15 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.email
 
+    def to_dict(self):
+        return {
+            'userid': self.userid,
+            'username': self.username,
+            'email': self.email,
+            'flags': self.flags.to_dict(),
+            'words': self.words.to_dict()
+        }
+
 
 class Flag(db.Model):
     __tablename__ = 'flags'
@@ -38,6 +47,13 @@ class Flag(db.Model):
     def __repr__(self):
         return '<Flag %r>' % self.userid
 
+    def to_dict(self):
+        return {
+            'userid': self.userid,
+            'todo': self.todo,
+            'hoursrange': self.hoursrange
+        }
+
 
 class Word(db.Model):
     __tablename__ = 'words'
@@ -47,3 +63,9 @@ class Word(db.Model):
 
     def __repr__(self):
         return '<Word %r>' % self.userid
+
+    def to_dict(self):
+        return {
+            'userid': self.userid,
+            'list': self.list
+        }
