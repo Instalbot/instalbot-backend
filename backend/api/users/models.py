@@ -43,6 +43,8 @@ class Flag(db.Model):
     userid = db.Column(db.Integer, db.ForeignKey('users.userid', ondelete='CASCADE'), primary_key=True)
     todo = db.Column(db.Boolean, default=False)
     hoursrange = db.Column(NUMRANGE, default='[14, 22]')
+    instaling_user = db.Column(db.String(255), default='', nullable=False)
+    instaling_pass = db.Column(db.String(255), default='', nullable=False)
 
     def __repr__(self):
         return '<Flag %r>' % self.userid
@@ -51,7 +53,9 @@ class Flag(db.Model):
         return {
             'userid': self.userid,
             'todo': self.todo,
-            'hoursrange': self.hoursrange
+            'hoursrange': self.hoursrange,
+            'instaling_user': self.instaling_user,
+            'instaling_pass': ''
         }
 
 

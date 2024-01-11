@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from .controllers import get_settings, update_settings
+from .controllers import get_settings, update_settings, update_instaling_login
 
 settingsBlueprint = Blueprint('settings', __name__)
 
@@ -12,3 +12,9 @@ def handle_settings():
         return get_settings()
     elif request.method == 'PUT':
         return update_settings()
+
+
+@settingsBlueprint.post("/instaling")
+@jwt_required()
+def instaling():
+    return update_instaling_login()
