@@ -56,7 +56,8 @@ class Flag(db.Model):
             'todo': self.todo,
             'hoursrange': self.hoursrange,
             'instaling_user': self.instaling_user,
-            'instaling_pass': ''
+            'instaling_pass': '',
+            'error_level': self.error_level
         }
 
 

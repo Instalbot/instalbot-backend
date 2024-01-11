@@ -64,14 +64,18 @@ def update_settings():
 
         flags = request_json['flags']
 
-        if 'hoursrange' not in flags or 'lower' not in flags['hoursrange'] or 'upper' not in flags['hoursrange']:
+        if 'error_level' not in flags or 'hoursrange' not in flags or 'lower' not in flags['hoursrange'] or 'upper' not in flags['hoursrange']:
             return jsonify({'message': 'Invalid hoursrange format', 'code': 400}), 400
 
         lower = flags['hoursrange']['lower']
         upper = flags['hoursrange']['upper']
+        error_level = flags['error_level']
 
         if not is_number(lower) or not is_number(upper):
             return jsonify({'message': 'Invalid number format in hoursrange', 'code': 400}), 400
+
+        if not is_number(error_level):
+            return jsonify({'message': 'Invalid error level', 'code': 400}), 400
 
         user = db.session.query(User).filter_by(userid=userid).first()
 
@@ -84,6 +88,7 @@ def update_settings():
 
         flag_to_update = user.flags[0]
         flag_to_update.hoursrange = "[{}, {}]".format(lower, upper)
+        flag_to_update.error_level = error_level
 
         db.session.commit()
 
