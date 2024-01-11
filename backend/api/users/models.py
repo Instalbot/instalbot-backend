@@ -45,6 +45,7 @@ class Flag(db.Model):
     hoursrange = db.Column(NUMRANGE, default='[14, 22]')
     instaling_user = db.Column(db.String(255), default='', nullable=False)
     instaling_pass = db.Column(db.String(255), default='', nullable=False)
+    error_level = db.Column(db.Integer, default=5, nullable=False)
 
     def __repr__(self):
         return '<Flag %r>' % self.userid
