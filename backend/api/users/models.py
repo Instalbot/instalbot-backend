@@ -74,5 +74,6 @@ class Word(db.Model):
     def to_dict(self):
         return {
             'userid': self.userid,
-            'list': self.list
+            'list': self.list,
+            'active': self.active
         }
