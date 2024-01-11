@@ -23,6 +23,13 @@ def my_invalid_token_callback(_):
         'code': 401
     }), 401
 
+@jwt.unauthorized_loader
+def my_unauthorized_loader_callback(_):
+    return jsonify({
+        'message': 'Unauthorized',
+        'code': 401
+    }), 401
+
 
 @app.errorhandler(404)
 def not_found(_):

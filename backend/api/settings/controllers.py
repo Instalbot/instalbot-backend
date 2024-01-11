@@ -96,7 +96,7 @@ def update_instaling_login():
     request_json = request.get_json()
     userid = get_jwt_identity()
 
-    if not request_json or 'login' not in request_json or 'password' not in request_json:
+    if not request_json or ('login' not in request_json) or ('password' not in request_json):
         return jsonify({'message': 'Invalid request format', 'code': 400}), 400
 
     login = request_json['login']
