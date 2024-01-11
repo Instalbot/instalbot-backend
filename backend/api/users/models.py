@@ -41,8 +41,8 @@ class Flag(db.Model):
     __tablename__ = 'flags'
 
     userid = db.Column(db.Integer, db.ForeignKey('users.userid', ondelete='CASCADE'), primary_key=True)
-    todo = db.Column(db.Boolean, default=False)
-    hoursrange = db.Column(NUMRANGE, default='[14, 22]')
+    todo = db.Column(db.Boolean, default=False, nullable=False)
+    hoursrange = db.Column(NUMRANGE, default='[14, 22]', nullable=False)
     instaling_user = db.Column(db.String(255), default='', nullable=False)
     instaling_pass = db.Column(db.String(255), default='', nullable=False)
     error_level = db.Column(db.Integer, default=5, nullable=False)
@@ -66,6 +66,7 @@ class Word(db.Model):
 
     userid = db.Column(db.Integer, db.ForeignKey('users.userid', ondelete='CASCADE'), primary_key=True)
     list = db.Column(JSON, nullable=False, default=[])
+    active = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return '<Word %r>' % self.userid
