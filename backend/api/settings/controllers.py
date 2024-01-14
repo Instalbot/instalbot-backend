@@ -2,7 +2,7 @@ import os
 
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
-from ..urls import db
+from ..urls import db, app
 from ..users.models import User, Word, Flag
 
 
@@ -17,6 +17,13 @@ def xor_encryption(text, key):
         encrypted_text += chr(ord(text[i]) ^ ord(key[i % len(key)]))
 
     return encrypted_text
+
+
+def request_update():
+    try:
+        data = request.get_json()
+    except Exception as e:
+        return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
 
 
 def get_settings():
@@ -50,7 +57,7 @@ def get_settings():
         }), 200
 
     except Exception as e:
-        db.session.rollback()  # Rollback changes if an exception occurs
+        db.session.rollback()
         return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
 
 
@@ -97,31 +104,51 @@ def update_settings():
     except Exception as e:
         return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
 
+
 def update_instaling_login():
-    request_json = request.get_json()
-    userid = get_jwt_identity()
+    try:
+        request_json = request.get_json()
+        userid = get_jwt_identity()
 
-    if not request_json or ('login' not in request_json) or ('password' not in request_json):
-        return jsonify({'message': 'Invalid request format', 'code': 400}), 400
+        if not request_json or ('login' not in request_json) or ('password' not in request_json):
+            return jsonify({'message': 'Invalid request format', 'code': 400}), 400
 
-    login = request_json['login']
-    password = request_json['password']
+        login = request_json['login']
+        password = request_json['password']
 
-    user = db.session.query(User).filter_by(userid=userid).first()
+        user = db.session.query(User).filter_by(userid=userid).first()
 
-    if user is None:
-        return jsonify({'message': 'User does not exist', 'code': 401}), 401
+        if user is None:
+            return jsonify({'message': 'User does not exist', 'code': 401}), 401
 
-    # Ensure the user updating the flags is the same as the one in the JWT
-    if user.userid != userid:
-        return jsonify({'message': 'Unauthorized to update user flags', 'code': 403}), 403
+        # Ensure the user updating the flags is the same as the one in the JWT
+        if user.userid != userid:
+            return jsonify({'message': 'Unauthorized to update user flags', 'code': 403}), 403
 
-    hashed_password = xor_encryption(password, os.getenv('INSTALING_KEY'))
+        hashed_password = xor_encryption(password, os.getenv('INSTALING_KEY'))
 
-    flag_to_update = user.flags[0]
-    flag_to_update.instaling_user = login
-    flag_to_update.instaling_pass = hashed_password
+        flag_to_update = user.flags[0]
+        flag_to_update.instaling_user = login
+        flag_to_update.instaling_pass = hashed_password
 
-    db.session.commit()
+        db.session.commit()
 
-    return jsonify({'message': 'OK!', 'code': 200}), 200
+        return jsonify({'message': 'OK!', 'code': 200}), 200
+    except Exception as e:
+        return jsonify({'message': 'Internal Server Error', 'code': 500}), 500
+
+
+def request_scrape():
+    try:
+        userid = get_jwt_identity()
+
+        user = db.session.query(Flag).filter_by(userid=userid).first()
+
+        if user is None:
+            return jsonify({'message': 'User does not exist', 'code': 401}), 401
+
+        app.r.lpush("task_queue", f"SCRAPER-REQUEST-{app.t}-{userid}")
+
+        return jsonify({'message': 'OK!', 'code': 200}), 200
+    except Exception as e:
+        return jsonify({'message': 'Internal Server Error, cannot scrape', 'code': 500}), 500

@@ -1,10 +1,25 @@
 import os
+import threading
+
 from flask import jsonify
 from flask_jwt_extended import JWTManager
 from . import create_app, jwt
 from .api import urls
+import redis
 
 app = create_app(os.getenv('CONFIG_MODE') or 'development')
+
+r = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST"),
+    port=os.getenv("REDIS_PORT"),
+    password=os.getenv("REDIS_PASSWORD"),
+    decode_responses=True,
+    db=0
+)
+t = r.client_id()
+
+pubsub = r.pubsub()
+pubsub.subscribe('workers_finished')
 
 
 @jwt.expired_token_loader
@@ -65,6 +80,22 @@ def hello():
 
 app.register_blueprint(urls.apiBlueprint, url_prefix='/api')
 
+listener = False
 
-if __name__ == '__main__':
-    app.run()
+def listen_for_messages():
+    global listener
+    listener = True
+    for message in pubsub.listen():
+        if message['type'] == 'message':
+            splitted = str(message['data']).split("-")
+            emitter = splitted[0]
+            event_type = splitted[1]
+            worker_id = splitted[2]
+            user_id = splitted[3]
+
+            if emitter == 'SCRAPER':
+                if int(worker_id) == t:
+                    print(f"Receiver {event_type} scraping task for {user_id}!")
+
+if not listener:
+    threading.Thread(target=listen_for_messages).start()

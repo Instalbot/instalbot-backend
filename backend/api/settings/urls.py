@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from .controllers import get_settings, update_settings, update_instaling_login
+from .controllers import get_settings, update_settings, update_instaling_login, request_scrape
 
 settingsBlueprint = Blueprint('settings', __name__)
 
@@ -18,3 +18,9 @@ def handle_settings():
 @jwt_required()
 def instaling():
     return update_instaling_login()
+
+
+@settingsBlueprint.post("/instaling/scrape")
+@jwt_required()
+def scrape():
+    return request_scrape()
