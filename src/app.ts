@@ -1,25 +1,22 @@
 import dotenv from "dotenv";
-import express from "express";
+import fastify from "fastify";
 
 import router from "./routes/router";
 import logger from "./logger";
 
 dotenv.config();
 
-const app = express();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", router);
-
-app.get("/", (req, res) => {
-    res.json({ message: "Hello from backend", status: 200 });
+const server = fastify({
+    logger: false
 });
 
-app.get("/*", (req, res) => {
-    res.status(404).json({ message: "Not found", status: 404 })
-});
+server.register(router, { prefix: "/api" });
 
-app.listen(3000, () => {
-    logger.ready("Server is listening on port 3000");
-});
+server.listen({ port: 3000 }, (err) => {
+    if (err) {
+        logger.error(`Error while starting server: ${err}`);
+        process.exit(1)
+    } else {
+        logger.ready(`Server listening on port 3000`);
+    }
+})

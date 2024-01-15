@@ -1,20 +1,25 @@
-import { Router } from "express";
+import { FastifyInstance, FastifyPluginOptions, FastifyPluginAsync, DoneFuncWithErrOrRes } from "fastify";
+import fastifyPlugin from "fastify-plugin";
 
-import { validateToken } from "./middlewares";
 import settings from "./settings/settings";
 import users from "./users/users";
+import { IFlag } from "../database/flags";
 
-declare global {
-    namespace Express {
-        export interface Request {
-            __jwt__userid?: number
+
+declare module 'fastify' {
+    export interface FastifyRequest  {
+        __jwt__user?: {
+            userid?: number,
+            flags?: IFlag
         }
     }
 }
 
-const router = Router();
+async function initRouter(api: FastifyInstance, options: FastifyPluginOptions, done: DoneFuncWithErrOrRes) {
+    api.register(settings, { prefix: "/settings" });
+    api.register(users, { prefix: "/users" });
 
-router.use("/settings", validateToken, settings);
-router.use("/users", users);
+    done();
+}
 
-export default router;
+export default fastifyPlugin(initRouter as FastifyPluginAsync, { encapsulate: true });

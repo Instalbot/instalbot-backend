@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { FastifyInstance, FastifyPluginOptions, FastifyPluginAsync } from "fastify";
+import fastifyPlugin from "fastify-plugin";
 import { hash, verify } from "argon2";
 import { sign } from "jsonwebtoken";
 import { cpus } from "os";
@@ -7,96 +8,119 @@ import { validateToken } from "../middlewares";
 import { IUser, createUser, getUserByEmail } from "../../database/users";
 import logger from "../../logger";
 
-const router = Router();
+interface UserLoginRequestBody {
+    email?: string;
+    password?: string;
+}
 
-router.post("/login", async(req, res) => {
-    const body = req.body;
+interface UserRegisterRequestBody extends UserLoginRequestBody {
+    username?: string;
+}
 
-    if (!body.email || !body.password)
-        return res.status(400).json({ message: "Bad Request", error: "Missing email or password", status: 400 });
+async function usersRoute(api: FastifyInstance, options: FastifyPluginOptions) {
+    api.post("/login", async(request, reply) => {
+        const body = request.body as UserLoginRequestBody;
 
-    let user: IUser | undefined;
+        if (!body.email || !body.password) {
+            reply.status(400);
+            return { message: "Bad request", error: "Missing email or password", status: 400 };
+        }
 
-    try {
-        user = await getUserByEmail(body.email);
-    } catch(err) {
-        logger.error(`Error while getting user by email: ${err}`)
-        return res.status(500).json({ message: "Internal Server Error", error: 0, status: 500 });
-    }
+        let user;
+        try {
+            user = await getUserByEmail(body.email);
+        } catch (err) {
+            logger.error(`Error while getting user by email: ${err}`)
+            reply.status(500);
+            return { message: "Internal Server Error", error: "Error while getting user by email", status: 500 };
+        }
 
-    if (!user)
-        return res.status(401).json({ message: "Unauthorized", error: "Invalid email or password", status: 401 });
+        if (!user) {
+            reply.status(401);
+            return { message: "Unauthorized", error: "Invalid email or password", status: 401 };
+        }
 
-    let valid = false;
+        let valid;
+        try {
+            valid = await verify(user.password, body.password);
+        } catch (err) {
+            reply.status(401);
+            return { message: "Unauthorized", error: "Invalid email or password", status: 401 };
+        }
 
-    try {
-        valid = await verify(user.password, body.password);
-    } catch(err) {
-        return res.status(401).json({ message: "Unauthorized", error: "Invalid email or password", status: 401 });
-    }
+        if (!valid) {
+            reply.status(401);
+            return { message: "Unauthorized", error: "Invalid email or password", status: 401 };
+        }
 
-    if (!valid)
-        return res.status(401).json({ message: "Unauthorized", error: "Invalid email or password", status: 401 });
+        const token = sign({ userid: user.userid }, process.env.JWT_SECRET as string, { expiresIn: "1h", algorithm: "HS512" });
 
-    const token = sign({ userid: user.userid }, process.env.JWT_SECRET as string, {
-        algorithm: "HS512",
-        expiresIn: "1h"
+        return { message: "Success", token, status: 200 };
     });
 
-    res.json({ message: "Success", token, status: 200 });
-});
+    api.post("/register", async(request, reply) => {
+        const body = request.body as UserRegisterRequestBody;
 
-router.post("/register", async(req, res) => {
-    const body = req.body;
+        if (!body.email || !body.password || !body.username) {
+            reply.status(400);
+            return { message: "Bad request", error: "Missing email, password or username", status: 400 };
+        }
 
-    if (!body.email || !body.password || !body.username)
-        return res.status(400).json({ message: "Bad Request", error: "Missing email, password or username", status: 400 });
+        let user: IUser | undefined;
 
-    let user: IUser | undefined;
+        try {
+            user = await getUserByEmail(body.email);
+        } catch(err) {
+            logger.error(`Error while getting user by email: ${err}`)
+            reply.status(500);
+            return { message: "Internal Server Error", error: "Error while getting user by email", status: 500 };
+        }
 
-    try {
-        user = await getUserByEmail(body.email);
-    } catch(err) {
-        logger.error(`Error while getting user by email: ${err}`)
-        return res.status(500).json({ message: "Internal Server Error", error: 0, status: 500 });
-    }
+        if (user) {
+            reply.status(400);
+            return { message: "Bad request", error: "User already exists", status: 400 };
+        }
 
-    if (user)
-        return res.status(401).json({ message: "Bad Request", error: "User already exists", status: 400 });
+        let password: string;
 
-    let password: string;
+        try {
+            password = await hash(body.password, {
+                hashLength: 32,
+                memoryCost: 2 ** 16,
+                parallelism: cpus().length * 2,
+                timeCost: 4
+            })
+        } catch(err) {
+            logger.error(`Error while hashing password: ${err}`);
+            reply.status(500);
+            return { message: "Internal Server Error", error: "Error while hashing password", status: 500 };
+        }
 
-    try {
-        password = await hash(body.password, {
-            hashLength: 32,
-            memoryCost: 2 ** 16,
-            parallelism: cpus().length * 2,
-            timeCost: 4
-        })
-    } catch(err) {
-        logger.error(`Error while hashing password: ${err}`);
-        return res.status(500).json({ message: "Internal Server Error", error: 1, status: 500 });
-    }
+        let userid: number;
 
-    let userid: number;
+        try {
+            userid = await createUser(body.email, password, body.username);
+        } catch(err) {
+            logger.error(`Error while creating user: ${err}`);
+            reply.status(500);
+            return { message: "Internal Server Error", error: "Error while creating user", status: 500 };
+        }
 
-    try {
-        userid = await createUser(body.email, password, body.username);
-    } catch(err) {
-        logger.error(`Error while creating user: ${err}`);
-        return res.status(500).json({ message: "Internal Server Error", error: 2, status: 500 });
-    }
+        return { message: "Success", userid, status: 200 };
+    });
 
-    res.json({ message: "Success", userid, status: 200 });
-});
+    api.get("/", {
+        preHandler: validateToken,
+    }, async(request, reply) => {
+        const userid = request.__jwt__user?.userid;
 
-router.get("/", validateToken, async(req, res) => {
-    const userid = req.__jwt__userid;
+        if (!userid) {
+            reply.status(500);
+            return { message: "Internal Server Error", error: "Userid not present in request", status: 500 };
+        }
 
-    if (!userid)
-        return res.status(500).json({ message: "Internal Server Error", error: 0, status: 500 });
+        return { message: "Success", userid, status: 200 };
+    });
+}
 
-    res.json({ message: "Success", userid, status: 200 });
-});
-
-export default router;
+export default fastifyPlugin(usersRoute as FastifyPluginAsync, { encapsulate: true });
