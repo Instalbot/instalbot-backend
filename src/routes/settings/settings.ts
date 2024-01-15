@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyPluginAsync } from "fastify";
 import fastifyPlugin from "fastify-plugin";
 
-import { initFlags, validateToken } from "../middlewares";
+import { initFlags, initWords, validateToken } from "../middlewares";
 import { IFlag, updateFlags } from "../../database/flags";
 import logger from "../../logger";
+import { getClient } from "../../redis";
 
 const hoursRangeRegex = new RegExp("\\[[\\d]{1,2},[ ]*.?[\\d]{1,2}\\]");
 
@@ -96,10 +97,26 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
     });
 }
 
-async function router(server: FastifyInstance, options: FastifyPluginOptions) {
+async function router(api: FastifyInstance, options: FastifyPluginOptions) {
     const flagsRouter = fastifyPlugin(flagsRoute as FastifyPluginAsync, { encapsulate: true });
 
-    server.register(flagsRouter, { prefix: "/flags" });
+    api.get("/request-scrape", {
+        preHandler: [validateToken, initWords],
+    }, async(request, reply) => {
+        if (!request.__jwt__user || !request.__jwt__user.userid) {
+            reply.status(500);
+            return { message: "Internal Server Error", error: 1000, status: 500 };
+        }
+
+        const client = await getClient();
+        const clientId = await client.CLIENT_ID();
+
+        client.lPush("task_queue", `SCRAPER-REQUEST-${clientId}-${request.__jwt__user.userid}`);
+
+        return { message: "Success", status: 200 };
+    });
+
+    api.register(flagsRouter, { prefix: "/flags" });
 }
 
 export default fastifyPlugin(router as FastifyPluginAsync, { encapsulate: true });

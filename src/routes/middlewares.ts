@@ -3,6 +3,7 @@ import { verify } from "jsonwebtoken";
 
 import { createFlags, getFlags } from "../database/flags";
 import logger from "../logger";
+import { createWords, getWords } from "../database/words";
 
 export async function validateToken(request: FastifyRequest, reply: FastifyReply) {
     const authorizationHeader = request.headers["authorization"];
@@ -57,4 +58,24 @@ export async function initFlags(request: FastifyRequest, reply: FastifyReply) {
     }
 
     request.__jwt__user.flags = flags;
+}
+
+export async function initWords(request: FastifyRequest, reply: FastifyReply) {
+    const req_userid = request.__jwt__user?.userid;
+
+    if (!request.__jwt__user || !req_userid) {
+        reply.status(500);
+        return { message: "Internal Server Error", error: 1003, status: 500 };
+    }
+
+    let words = await getWords(req_userid);
+
+    try {
+        if (!words)
+            words = await createWords(req_userid);
+    } catch(err) {
+        logger.error(`Error while creating words: ${err}`);
+        reply.status(500);
+        return { message: "Internal Server Error", error: 1011, status: 500 };
+    }
 }

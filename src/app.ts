@@ -4,6 +4,8 @@ import fastify from "fastify";
 import router from "./routes/router";
 import logger from "./logger";
 
+import "./redis";
+
 dotenv.config();
 
 const server = fastify({
