@@ -12,7 +12,7 @@ const logFormat = winston.format.combine(
         }
     }),
     winston.format.label({
-        label: "[4RDM-BOT]"
+        label: "[INSTALBOT]"
     }),
     winston.format.timestamp({
         format:"YY-MM-DD HH:mm:ss"
