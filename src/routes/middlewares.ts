@@ -40,8 +40,6 @@ export async function validateToken(request: FastifyRequest, reply: FastifyReply
 export async function initFlags(request: FastifyRequest, reply: FastifyReply) {
     const req_userid = request.__jwt__user?.userid;
 
-    console.log(request.__jwt__user);
-
     if (!request.__jwt__user || !req_userid) {
         reply.status(500);
         return { message: "Internal Server Error", error: 1003, status: 500 };
