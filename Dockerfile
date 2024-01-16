@@ -1,0 +1,13 @@
+FROM node:latest-alpine
+
+COPY . /app
+
+WORKDIR /app
+
+RUN npm install
+
+RUN npm run build
+
+RUN npm prune --production
+
+CMD npm run start
