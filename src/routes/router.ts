@@ -4,6 +4,7 @@ import fastifyPlugin from "fastify-plugin";
 import settings from "./settings/settings";
 import users from "./users/users";
 import { IFlag } from "../database/flags";
+import { IWord } from "../database/words";
 
 
 declare module 'fastify' {
@@ -11,6 +12,7 @@ declare module 'fastify' {
         __jwt__user?: {
             userid?: number,
             flags?: IFlag
+            words?: IWord
         }
     }
 }

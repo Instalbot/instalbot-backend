@@ -78,4 +78,6 @@ export async function initWords(request: FastifyRequest, reply: FastifyReply) {
         reply.status(500);
         return { message: "Internal Server Error", error: 1011, status: 500 };
     }
+
+    request.__jwt__user.words = words;
 }

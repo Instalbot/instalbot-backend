@@ -22,7 +22,6 @@ function checkHoursRange(hoursRange: string) {
 }
 
 async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
-    api.addHook("preHandler", validateToken);
     api.addHook("preHandler", initFlags);
 
     api.get("/", async(request, reply) => {
@@ -97,12 +96,23 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
     });
 }
 
-async function router(api: FastifyInstance, options: FastifyPluginOptions) {
-    const flagsRouter = fastifyPlugin(flagsRoute as FastifyPluginAsync, { encapsulate: true });
+async function wordsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
+    api.addHook("preHandler", initWords);
 
-    api.get("/request-scrape", {
-        preHandler: [validateToken, initWords],
-    }, async(request, reply) => {
+    api.get("/", async(request, reply) => {
+        const user = request.__jwt__user;
+
+        if (!user) {
+            reply.status(500);
+            return { message: "Internal Server Error", error: 1000, status: 500 };
+        }
+
+        const words = user.words;
+
+        return { message: "Success", words, status: 200 };
+    });
+
+    api.get("/request-scrape", async(request, reply) => {
         if (!request.__jwt__user || !request.__jwt__user.userid) {
             reply.status(500);
             return { message: "Internal Server Error", error: 1000, status: 500 };
@@ -115,8 +125,16 @@ async function router(api: FastifyInstance, options: FastifyPluginOptions) {
 
         return { message: "Success", status: 200 };
     });
+}
+
+async function router(api: FastifyInstance, options: FastifyPluginOptions) {
+    api.addHook("preHandler", validateToken);
+
+    const flagsRouter = fastifyPlugin(flagsRoute as FastifyPluginAsync, { encapsulate: true });
+    const wordsRouter = fastifyPlugin(wordsRoute as FastifyPluginAsync, { encapsulate: true });
 
     api.register(flagsRouter, { prefix: "/flags" });
+    api.register(wordsRouter, { prefix: "/words" });
 }
 
 export default fastifyPlugin(router as FastifyPluginAsync, { encapsulate: true });
