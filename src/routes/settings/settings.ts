@@ -4,7 +4,6 @@ import fastifyPlugin from "fastify-plugin";
 import { initFlags, initWords, validateToken } from "../middlewares";
 import { IFlag, updateFlags } from "../../database/flags";
 import logger from "../../logger";
-import { getClient } from "../../redis";
 
 const hoursRangeRegex = new RegExp("\\[[\\d]{1,2},[ ]*.?[\\d]{1,2}\\]");
 
@@ -118,10 +117,10 @@ async function wordsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
             return { message: "Internal Server Error", error: 1000, status: 500 };
         }
 
-        const client = await getClient();
-        const clientId = await client.CLIENT_ID();
+        //const client = await getClient();
+        //const clientId = await client.CLIENT_ID();
 
-        client.lPush("task_queue", `SCRAPER-REQUEST-${clientId}-${request.__jwt__user.userid}`);
+        //client.lPush("task_queue", `SCRAPER-REQUEST-${clientId}-${request.__jwt__user.userid}`);
 
         return { message: "Success", status: 200 };
     });
