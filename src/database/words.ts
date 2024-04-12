@@ -2,6 +2,7 @@ import { PoolClient } from "pg";
 import { getClient } from "./database";
 
 export interface IWord {
+    userid: number;
     flagid: number;
     list: { key: string, value: string }[];
 }

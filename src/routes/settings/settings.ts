@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyPluginAsync } from "fasti
 import fastifyPlugin from "fastify-plugin";
 
 import { initFlags, initWords, validateToken } from "../middlewares";
-import { updateFlags } from "../../database/flags";
+import { createFlags, updateFlags } from "../../database/flags";
 import logger from "../../logger";
 
 const hoursRangeRegex = new RegExp("\\[[\\d]{1,2},[ ]*.?[\\d]{1,2}\\]");
@@ -38,6 +38,33 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
 
         return { message: "Success", flags, status: 200 };
     });
+
+    api.post("/", async(request, reply) => {
+        const user = request.__jwt__user;
+
+        if (!request.__jwt__user || !user || !user.userid) {
+            reply.status(500);
+            return { message: "Internal Server Error", error: 1000, status: 500 };
+        }
+
+        let flag;
+
+        try {
+            flag = await createFlags(user.userid);
+        } catch(err) {
+            reply.status(500);
+            return { message: "Internal Server Error", error: 1009, status: 500 };
+        }
+
+        if (user.flags)
+            request.__jwt__user.flags?.push(flag);
+        else {
+            request.__jwt__user.flags = [];
+            request.__jwt__user.flags.push(flag);
+        }
+
+        return { message: "Success", flags: flag, status: 200 };
+    })
 
     api.put("/:flagid", async(request, reply) => {
         const user = request.__jwt__user;

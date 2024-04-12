@@ -1,11 +1,10 @@
-import dotenv from "dotenv";
 import fastify from "fastify";
 import cors from "@fastify/cors";
 
 import router from "./routes/router";
 import logger from "./logger";
 
-dotenv.config();
+import "dotenv/config";
 
 const server = fastify({
     logger: false,
