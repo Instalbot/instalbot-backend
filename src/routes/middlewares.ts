@@ -3,7 +3,7 @@ import { verify } from "jsonwebtoken";
 
 import { createFlags, getFlags } from "../database/flags";
 import logger from "../logger";
-import { createWords, getWords } from "../database/words";
+import { IWord, createWords, getWords, getWordsByFlagId } from "../database/words";
 
 export async function validateToken(request: FastifyRequest, reply: FastifyReply) {
     const authorizationHeader = request.headers["authorization"];
@@ -33,7 +33,7 @@ export async function validateToken(request: FastifyRequest, reply: FastifyReply
             throw new Error("Unauthorized");
         }
 
-        request.__jwt__user = {}
+        request.__jwt__user = {};
         request.__jwt__user.userid = (decoded as any).userid;
     });
 }
@@ -49,10 +49,11 @@ export async function initFlags(request: FastifyRequest, reply: FastifyReply) {
     let flags = await getFlags(req_userid);
 
     try {
-        if (!flags)
-            flags = await createFlags(req_userid);
+        if (!flags[0])
+            flags.push(await createFlags(req_userid));
     } catch(err) {
-        logger.error(`Error while creating flags: ${err}`);
+        logger.error(`initFlags(): Error while creating flags: ${err}`);
+
         reply.status(500);
         return { message: "Internal Server Error", error: 1001, status: 500 };
     }
@@ -60,23 +61,38 @@ export async function initFlags(request: FastifyRequest, reply: FastifyReply) {
     request.__jwt__user.flags = flags;
 }
 
+// TODO: rewrite words to use multiple flags
 export async function initWords(request: FastifyRequest, reply: FastifyReply) {
-    const req_userid = request.__jwt__user?.userid;
+    const user = request.__jwt__user;
 
-    if (!request.__jwt__user || !req_userid) {
+    if (!request.__jwt__user || !user || !user.userid || !user.flags) {
         reply.status(500);
         return { message: "Internal Server Error", error: 1003, status: 500 };
     }
 
-    let words = await getWords(req_userid);
+    let words: IWord[] = [];
 
     try {
-        if (!words)
-            words = await createWords(req_userid);
+        words = await getWords(user.userid);
     } catch(err) {
         logger.error(`Error while creating words: ${err}`);
         reply.status(500);
-        return { message: "Internal Server Error", error: 1011, status: 500 };
+        return { message: "Internal Server Error", error: 1019, status: 500 };
+    }
+
+    if (user.flags.length > words.length) {
+        try {
+            user.flags.forEach(async user => {
+                const wordsById = await getWordsByFlagId(user.flagid);
+
+                if (!wordsById)
+                    words.push(await createWords(user.flagid, user.userid));
+            });
+        } catch(err) {
+            logger.error(`Error while creating words: ${err}`);
+            reply.status(500);
+            return { message: "Internal Server Error", error: 1011, status: 500 };
+        }
     }
 
     request.__jwt__user.words = words;

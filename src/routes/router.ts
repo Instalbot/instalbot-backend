@@ -11,8 +11,8 @@ declare module 'fastify' {
     export interface FastifyRequest  {
         __jwt__user?: {
             userid?: number,
-            flags?: IFlag
-            words?: IWord
+            flags?: IFlag[]
+            words?: IWord[]
         }
     }
 }

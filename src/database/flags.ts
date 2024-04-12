@@ -2,6 +2,7 @@ import { PoolClient } from "pg";
 import { getClient } from "./database";
 
 export interface IFlag {
+    flagid: number;
     userid: number;
     todo: boolean;
     instaling_user: string;
@@ -30,7 +31,7 @@ export async function getFlags(userid: number, poolClient?: PoolClient) {
 
         client.release();
 
-        return (result.rows[0] as IFlag) || undefined;
+        return result.rows as IFlag[]
     } catch(err) {
         throw new Error(err as string);
     }
@@ -50,7 +51,7 @@ export async function createFlags(userid: number, poolClient?: PoolClient) {
     }
 }
 
-export async function updateFlags(userid: number, flags: any, oldPassword: string, poolClient?: PoolClient) {
+export async function updateFlags(flagid: number, flags: any, oldPassword: string, poolClient?: PoolClient) {
     try {
         const client = poolClient || await getClient();
         let password = "";
@@ -64,13 +65,13 @@ export async function updateFlags(userid: number, flags: any, oldPassword: strin
             password = oldPassword;
         }
 
-        const result = await client.query("UPDATE flags SET todo = $1, instaling_user = $2, instaling_pass = $3, error_level = $4, hoursrange = $5 WHERE userid = $6 RETURNING *", [
+        const result = await client.query("UPDATE flags SET todo = $1, instaling_user = $2, instaling_pass = $3, error_level = $4, hoursrange = $5 WHERE id = $6 RETURNING *", [
             true,
             flags.instaling_user,
             password,
             flags.error_level,
             flags.hoursrange,
-            userid
+            flagid
         ]);
 
         client.release();

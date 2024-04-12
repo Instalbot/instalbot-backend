@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyPluginAsync } from "fasti
 import fastifyPlugin from "fastify-plugin";
 
 import { initFlags, initWords, validateToken } from "../middlewares";
-import { IFlag, updateFlags } from "../../database/flags";
+import { updateFlags } from "../../database/flags";
 import logger from "../../logger";
 
 const hoursRangeRegex = new RegExp("\\[[\\d]{1,2},[ ]*.?[\\d]{1,2}\\]");
@@ -39,8 +39,14 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
         return { message: "Success", flags, status: 200 };
     });
 
-    api.put("/", async(request, reply) => {
+    api.put("/:flagid", async(request, reply) => {
         const user = request.__jwt__user;
+        const { flagid } = request.params as { flagid?: string };
+
+        if (!flagid || isNaN(parseInt(flagid))) {
+            reply.status(400);
+            return { message: "Request is missing 'flagid' parameter", error: 1021, status: 400 };
+        }
 
         if (!request.__jwt__user || !user) {
             reply.status(500);
@@ -49,22 +55,26 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
 
         const flags = user.flags;
 
-        if (!flags) {
+        if (!request.__jwt__user.flags || !user.flags || !flags || !flags[0]) {
             reply.status(500);
             return { message: "Internal Server Error", error: 1009, status: 500 };
         }
 
-        const toUpdate = Object.assign({
-            hoursrange: flags.hoursrange,
-            instaling_user: flags.instaling_user,
-            instaling_pass: flags.instaling_pass,
-            error_level: flags.error_level,
-        }, request.body)
+        let flag = flags.find(x => x.flagid == parseInt(flagid));
 
-        // @ts-ignore
+        if (!flag) {
+            reply.status(403);
+            return { message: "Flag is not associated with your account", error: 1022, status: 403 };
+        }
+
+        const toUpdate = Object.assign(flag, request.body)
+
+        // @ts-expect-error
         delete toUpdate["todo"];
-        // @ts-ignore
+        // @ts-expect-error
         delete toUpdate["userid"];
+        // @ts-expect-error
+        delete toUpdate["flagid"];
 
         if (!checkHoursRange(toUpdate.hoursrange)) {
             reply.status(400);
@@ -76,26 +86,27 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
             return { message: "Bad request", error: "error_level is not a number", status: 400 };
         }
 
-        let result: IFlag;
-
         try {
-            result = await updateFlags(user.userid || 0, toUpdate, flags.instaling_pass);
+            flag = await updateFlags(user.userid || 0, toUpdate, flag.instaling_pass);
         } catch(err) {
             logger.error(`Error updating flags for user ${user.userid}: ${err}`);
             reply.status(500);
             return { message: "Internal Server Error", error: 1009, status: 500 };
         }
 
-        request.__jwt__user.flags = result;
+        const index = flags.findIndex(x => x.flagid == flag?.flagid);
 
-        // @ts-ignore
-        delete result["instaling_pass"];
+        request.__jwt__user.flags[index] = flag;
 
-        return { message: "Success", flags: result, status: 200 };
+        // @ts-expect-error
+        delete flag["instaling_pass"];
+
+        return { message: "Success", flags: flag, status: 200 };
     });
 }
 
 async function wordsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
+    api.addHook("preHandler", initFlags);
     api.addHook("preHandler", initWords);
 
     api.get("/", async(request, reply) => {
