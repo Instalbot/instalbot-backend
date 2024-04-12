@@ -65,7 +65,7 @@ export async function updateFlags(flagid: number, flags: any, oldPassword: strin
             password = oldPassword;
         }
 
-        const result = await client.query("UPDATE flags SET todo = $1, instaling_user = $2, instaling_pass = $3, error_level = $4, hoursrange = $5 WHERE id = $6 RETURNING *", [
+        const result = await client.query("UPDATE flags SET todo = $1, instaling_user = $2, instaling_pass = $3, error_level = $4, hoursrange = $5 WHERE flagid = $6 RETURNING *", [
             true,
             flags.instaling_user,
             password,
