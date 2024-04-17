@@ -69,7 +69,7 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
     api.put("/:flagid", async(request, reply) => {
         const user = request.__jwt__user;
         const { flagid } = request.params as { flagid?: string };
-
+        
         if (!flagid || isNaN(parseInt(flagid))) {
             reply.status(400);
             return { message: "Request is missing 'flagid' parameter", error: 1021, status: 400 };
@@ -114,7 +114,7 @@ async function flagsRoute(api: FastifyInstance, options: FastifyPluginOptions) {
         }
 
         try {
-            flag = await updateFlags(user.userid || 0, toUpdate, flag.instaling_pass);
+            flag = await updateFlags(parseInt(flagid), toUpdate, flag.instaling_pass);
         } catch(err) {
             logger.error(`Error updating flags for user ${user.userid}: ${err}`);
             reply.status(500);
