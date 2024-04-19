@@ -5,7 +5,7 @@ import { sign } from "jsonwebtoken";
 import { cpus } from "os";
 
 import { validateToken } from "../middlewares";
-import { IUser, createUser, getUserByEmail } from "../../database/users";
+import { IUser, createUser, getUserByEmail, getUserById } from "../../database/users";
 import logger from "../../logger";
 
 interface UserLoginRequestBody {
@@ -112,14 +112,39 @@ async function usersRoute(api: FastifyInstance, options: FastifyPluginOptions) {
     api.get("/", {
         preHandler: validateToken,
     }, async(request, reply) => {
-        const userid = request.__jwt__user?.userid;
+        const user = request.__jwt__user;
 
-        if (!userid) {
+        if (!user || !user.userid) {
             reply.status(500);
-            return { message: "Internal Server Error", error: "Userid not present in request", status: 500 };
+            return { message: "Internal Server Error", error: "No session set", status: 500 };
         }
 
-        return { message: "Success", userid, status: 200 };
+       let fetchedUser;
+
+        try {
+            fetchedUser = await getUserById(user.userid);
+            logger.log(fetchedUser);
+        } catch(err) {
+            reply.status(500);
+            logger.error(`Error while getting user: ${err}`);
+            return { message: "Internal Server Error", error: "Database returned error", status: 500 };
+        }
+
+        if (!fetchedUser) {
+            reply.status(404);
+            return { message: "Not found", error: "User not found in database", status: 404 };
+        }
+
+        // @ts-ignore
+        delete fetchedUser["password"];
+        
+        // @ts-ignore
+        delete fetchedUser["flags"];
+
+        // @ts-ignore
+        delete fetchedUser["words"];
+
+        return { message: "Success", user: fetchedUser, status: 200 };
     });
 }
 
